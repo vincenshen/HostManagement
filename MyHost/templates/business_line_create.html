@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+    <div class="container" style="min-height: 700px">
+        <div class="col-md-6 col-md-offset-3" style="margin-top: 80px; margin-bottom: 50px">
+            <div class="panel panel-danger">
+                <div class="panel-heading">
+                   Business Line Create
+                </div>
+                <div class="panel-body" id="create-div">
+                    <form id="create-form" role="form">
+                        <div class="form-group">
+                            <label>Business-Line Name:</label>
+                            <input id="business-name" class="form-control" type="text" />
+                             <span id="business-error-span"></span>
+                        </div>
+                        <a href="{% url "index" %}" class="btn btn-default">Close </a>
+                        <input id="business-submit" type="submit" class="btn btn-danger" value="Create Now" disabled="disabled">
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        $("#create-form").submit(function () {
+            $.ajaxSetup({
+            data:{csrfmiddlewaretoken: '{{ csrf_token }}'}
+            });
+            $.ajax({
+                type:"POST",
+                url:"{% url "business_create" %}",
+                dataType:"json",
+                data:{name:$("#business-name").val()},
+                success:function (data) {
+                    if(data.status){
+                        $("#create-form").remove();
+                        $("#create-div").html('<span>创建成功</span><div><a href="{% url "business_create" %}">继续添加</a></div><div><a href="{% url "index" %}">返回主页</a></div>').css("margin-left","200px")
+                    }else {
+                        $("#business-error-span").text(data.error).css("color","red").css("font-size","12px");
+                    }
+                }
+            });
+            return false
+        });
+
+        $("#business-name").blur(function () {
+            var address=$(this).val();
+            if(address==""){
+                $("#business-error-span").text("Business Name不能为空").css("color","red");
+                $("#business-submit").attr("disabled","disabled");
+            }else {
+                $("#business-submit").removeAttr("disabled");
+            }
+        })
+    </script>
+{% endblock %}

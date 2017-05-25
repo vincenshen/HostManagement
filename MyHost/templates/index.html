@@ -1,0 +1,196 @@
+﻿{% extends "base.html" %}
+
+{% block content %}
+
+    <div class="content-wrapper" style="min-height: 700px">
+        <div class="container">
+            <div class="row pad-botm">
+                <div class="col-md-12">
+                    <h4 class="header-line">Your Host List</h4>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="panel panel-success">
+                        <div class="panel-heading">
+                            <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#AddModal">Add Business-Line</a>
+                            <a href="{% url "business_create" %}" class="btn btn-danger">Add Business-Line</a>
+                            <span id="business-span" class="col-md-offset-2" style="color: red"></span>
+                        </div>
+                        <div class="panel-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Host Name</th>
+                                            <th>IP Address</th>
+                                            <th>Business Line</th>
+                                             <th>Operation.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for host in hosts %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td target="host_id" style="display: none">{{ host.id }}</td>
+                                            <td target="host_name">{{ host.hostname }}</td>
+                                            <td target="host_address">{{ host.address }}</td>
+                                            <td>{{ host.business }}</td>
+                                            <td class="col-md-3">
+                                                <button class="btn btn-primary host-edit" data-toggle="modal" data-target="#EditModal"><i class="fa fa-edit"></i>Edit</button>
+                                                <a href="{% url "host_edit" host.id %}" class="btn btn-default"><i class=" fa fa-refresh "></i>Edit</a>
+                                                <a href="{% url "host_delete" host.id %}" class="btn btn-danger"><i class="fa fa-pencil"></i>Delete</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="AddModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <form id="add-business-form">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="exampleModalLabel">Add Business-line</h4>
+                  </div>
+                  <div class="modal-body">
+
+                      <div class="form-group">
+                        <label for="recipient-name" class="control-label">Business-line Name:</label>
+                        <input type="text" class="form-control" id="business-name">
+                          <span id="business-error-span"></span>
+                      </div>
+
+                  </div>
+                  <div class="modal-footer">
+                    <input id="close-modal" type="button" class="btn btn-default" data-dismiss="modal" value="Close">
+                    <input type="submit" class="btn btn-primary" id="business-submit" value="Create" disabled="disabled">
+                  </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="EditModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Edit Host Information</h4>
+              </div>
+              <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label>Host Name:</label>
+                        <input id="host_id" type="hidden" name="host-id">
+                        <input id="host_name" class="form-control" type="text" value=""/>
+                         <span id="hostname-error-span"></span>
+                    </div>
+                    <div class="form-group">
+                        <label>IP Address:</label>
+                        <input id="host_address" class="form-control" type="text" value=""/>
+                         <span id="address-error-span"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="row col-md-4">Business Line:</label>
+                        <select class="col-md-12 form-control" name="business-line" id="business-line">
+                            {% for business in business_obj %}
+                            <option value="{{ business.id }}">{{ business.name }}</option>
+                            {% endfor %}
+                        </select>
+                         <span id="business-error-span"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="row col-md-4">Host Owner:</label>
+                        <select class="col-md-12 form-control" name="host-owner" id="host-owner"  multiple="multiple">
+                            {% for user in user_obj %}
+                            <option value="{{ user.id }}">{{ user.username }}</option>
+                            {% endfor %}
+                        </select>
+                         <span id="business-error-span"></span>
+                    </div>
+                    <div style="margin-top: 250px">
+                        <a href="{% url "index" %}" class="btn btn-default">Close </a>
+                        <input id="host_update" type="submit" class="btn btn-danger" value="Update Now">
+                    </div>
+                </form>
+              </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        $("#add-business-form").submit(function () {
+            $.ajaxSetup({
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}'}
+            });
+            $.ajax({
+                type:"POST",
+                data:{name:$("#business-name").val()},
+                url:"{% url "business_create" %}",
+                dataType:"json",
+                success:function (data) {
+                    if(data.status){
+						$("#business-span").text("业务组创建成功");
+                        $("#close-modal").click();
+					}else {
+						$("#business-error-span").text(data.error).css("color","red").css("font-size","12px");
+					}
+                }
+            });
+            return false;
+        });
+
+        $(".host-edit").click(function () {
+            var tds=$(this).parent().siblings("td");
+            tds.each(function () {
+                var k=$(this).attr("target");
+                var v=$(this).text();
+                $("input[id="+k+"]").val(v);
+            })
+        });
+    
+        $("#host_name").blur(function () {
+            var hostname=$(this).val();
+            if(hostname==""){
+                $("#hostname-error-span").text("Host Name不能为空").css("color","red");
+                $("#host_update").attr("disabled","disabled");
+            }else {
+                $("#host_update").removeAttr("disabled");
+            }
+        });
+        $("#host_address").blur(function () {
+            var address=$(this).val();
+            if(address==""){
+                $("#address-error-span").text("IP Address不能为空").css("color","red");
+                $("#host_update").attr("disabled","disabled");
+            }else {
+                $("#host_update").removeAttr("disabled");
+            }
+        });
+
+        $("#business-name").blur(function () {
+            var address=$(this).val();
+            if(address==""){
+                $("#business-error-span").text("Business Name不能为空").css("color","red");
+                $("#business-submit").attr("disabled","disabled");
+            }else {
+                $("#business-submit").removeAttr("disabled");
+            }
+        })
+    </script>
+
+{% endblock %}

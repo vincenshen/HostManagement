@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="zh">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Login</title>
+	<link rel="stylesheet" href="{% static "css/font-awesome.css" %}">
+	<link rel="stylesheet" href="{% static "css/bootstrap.css" %}">
+	<link rel="stylesheet" href="{% static "css/htmleaf-demo.css" %}">
+	<style type="text/css">
+
+	</style>
+
+</head>
+<body>
+	<div class="htmleaf-container">
+		<header class="htmleaf-header">
+			<h1>WELCOME HOST MANAGEMENT</h1>
+			<div class="htmleaf-links">
+				<a class="htmleaf-icon icon-htmleaf-home-outline" href="#"><span> </span></a>
+				<a class="htmleaf-icon icon-htmleaf-arrow-forward-outline" href="#"><span> </span></a>
+			</div>
+		</header>
+		<div class="demo form-bg" style="padding: 60px 0;">
+		        <div class="container">
+		            <div class="row">
+		                <div class="col-md-offset-3 col-md-6" id="login-form">
+		                    <form class="form-horizontal log-form">
+		                        <span class="heading">User Login</span>
+		                        <div class="form-group">
+		                            <input type="text" class="form-control" id="login-username" name="username" placeholder="Username">
+		                            <i class="fa fa-user"></i>
+		                        </div>
+		                        <div class="form-group help">
+		                            <input type="password" class="form-control" id="login-password" name="password" placeholder="Password">
+		                            <i class="fa fa-lock"></i>
+									<p id="login-p"></p>
+		                        </div>
+		                        <div class="form-group">
+		                            <span id="register" class="text" style="cursor: pointer; font-size: 15px">没有账号？ 立即注册</span>
+		                            <input id="login-submit" type="submit" class="btn btn-default" value="Login">
+		                        </div>
+		                    </form>
+		                </div>
+
+                        <div class="col-md-offset-3 col-md-6" id="register-form" style="display: none;">
+                            <form class="form-horizontal reg-form">
+		                        <span class="heading reg-ok">User Register</span>
+		                        <div class="form-group reg-remove">
+		                            <input type="text" class="form-control" id="reg-username" placeholder="Username">
+		                            <i class="fa fa-user"></i>
+                                    <p id="reg-p-u"></p>
+                                    <i id="reg-i-u" style="display: none">0</i>
+		                        </div>
+		                        <div class="form-group help reg-remove">
+		                            <input type="password" class="form-control" id="reg-password" placeholder="Password">
+		                            <i class="fa fa-lock"></i>
+		                        </div>
+                                <div class="form-group help reg-remove">
+		                            <input type="password" class="form-control" id="reg-password2" placeholder="Repeat Password">
+		                            <i class="fa fa-lock"></i>
+                                    <p id="reg-p-p"></p><i id="reg-i-p" style="display: none">0</i>
+		                        </div>
+		                        <div class="form-group reg-remove">
+                                    <span class="text" id="login" style="cursor: pointer; font-size: 15px">注册成功？ 立即登录</span>
+		                            <input id="reg-submit" type="submit" class="btn btn-default" disabled="disabled" value="Register">
+		                        </div>
+		                    </form>
+                        </div>
+		            </div>
+		        </div>
+		    </div>
+	</div>
+	
+</body>
+<script src="{% static "js/jquery-1.11.1.js" %}"></script>
+<script src="{% static "js/bootstrap.js" %}"></script>
+<script>
+    $("#register").click(function () {
+        $("#register-form").css("display", "block");
+        $("#login-form").css("display", "none");
+    });
+    $("#login").click(function () {
+        $("#register-form").css("display", "none");
+        $("#login-form").css("display", "block");
+    });
+
+    <!-- Register Ajax -->
+    $("#reg-username").blur(function () {
+        var username=$("#reg-username").val();
+        if(username==""){
+            $("#reg-p-u").text("用户名不允许为空").css("color","red").css("font-size","12px");
+            $("#reg-submit").attr("disabled","disabled");
+        }else {
+            $.ajaxSetup({
+            data:{csrfmiddlewaretoken: '{{ csrf_token }}'}
+            });
+            $.ajax({
+                type:"POST",
+                data:{username:username},
+                url:"{% url "register" %}",
+                dataType:"json",
+                success:function (data) {
+                    if(data.status == false){
+                        $("#reg-p-u").text(data.error).css("color","red").css("font-size","12px");
+                        $("#reg-i-u").text(0);
+                    }else {
+                        $("#reg-p-u").text("");
+                        $("#reg-i-u").text(1);
+                    }
+                }
+            });
+        }
+        var count=Number($("#reg-i-u").text())+Number($("#reg-i-p").text());
+        if(count==2){
+            $("#reg-submit").removeAttr("disabled");
+        }else {
+            $("#reg-submit").attr("disabled","disabled");
+        }
+    });
+
+    $("#reg-password2").blur(function () {
+            var pass1 = $("#reg-password").val();
+            var pass2 = $("#reg-password2").val();
+            if(pass1==""){
+                $("#reg-p-p").text("密码不允许为空").css("color","red").css("font-size","12px");
+                $("#reg-submit").attr("disabled","disabled");
+            }else {
+                if(pass1!=pass2){
+                $("#reg-p-p").text("两次密码不一致").css("color","red").css("font-size","12px");
+                $("#reg-i-p").text(0)
+                }else {
+                    $("#reg-p-p").text("");
+                    $("#reg-i-p").text(1);
+                }
+                var count=Number($("#reg-i-u").text())+Number($("#reg-i-p").text());
+                if(count==2){
+                    $("#reg-submit").removeAttr("disabled");
+                }else {
+                    $("#reg-submit").attr("disabled","disabled");
+                }
+            }
+        });
+
+    $(".reg-form").submit(function () {
+        $.ajaxSetup({
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}'}
+            });
+        $.ajax({
+            type:"POST",
+            data:{username:$("#reg-username").val(), password:$("#reg-password").val()},
+            url:"{% url "register" %}",
+            dataType:"json",
+            success:function (data) {
+                if(data.status){
+                    $(".reg-remove").remove();
+                    $(".reg-ok").html('<span style="font-size: 16px">恭喜您注册成功！<a href="{% url "login" %}" id="reg-login">点击我登录...</a></span>')
+                }
+            }
+        });
+        return false;
+    });
+    <!-- Register Ajax End-->
+
+	<!-- Login Ajax -->
+	$(".log-form").submit(function () {
+            $.ajaxSetup({
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}'}
+            });
+            $.ajax({
+                type:"POST",
+                data:{username:$("#login-username").val(),password:$("#login-password").val()},
+                url:"{% url "login" %}",
+                dataType:"json",
+                success:function (data) {
+                    if(data.status){
+						window.location.href="{% url "index" %}";
+					}else {
+						$("#login-p").text(data.error).css("color","red").css("font-size","12px");
+					}
+                }
+            });
+            return false;
+        });
+	<!-- Login Ajax End-->
+</script>
+</html>

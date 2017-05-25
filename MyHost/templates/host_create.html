@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+    <div class="container" style="min-height: 700px">
+        <div class="col-md-6 col-md-offset-3" style="margin-top: 80px; margin-bottom: 50px">
+            <div class="panel panel-danger">
+                <div class="panel-heading">
+                   Host Create
+                </div>
+                <div class="panel-body" id="create-div">
+                    <form id="create-form" role="form">
+                        <div class="form-group">
+                            <label>Host Name:</label>
+                            <input id="host-name" class="form-control" type="text" />
+                             <span id="hostname-error-span"></span>
+                        </div>
+                        <div class="form-group">
+                            <label>IP Address:</label>
+                            <input id="ip-address" class="form-control" type="text" />
+                             <span id="address-error-span"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="row col-md-4">Business Line:</label>
+                            <select class="col-md-12 form-control" name="business-line" id="business-line">
+                                {% for business in business_obj %}
+                                <option value="{{ business.id }}">{{ business.name }}</option>
+                                {% endfor %}
+                            </select>
+                             <span id="business-error-span"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="row col-md-4">Host Owner:</label>
+                            <select class="col-md-12 form-control" name="host-owner" id="host-owner"  multiple="multiple">
+                                {% for user in user_obj %}
+                                <option value="{{ user.id }}">{{ user.username }}</option>
+                                {% endfor %}
+                            </select>
+                             <span id="business-error-span"></span>
+                        </div>
+                        <div style="margin-top: 250px">
+                            <a href="{% url "index" %}" class="btn btn-default">Close </a>
+                            <input id="business-submit" type="submit" class="btn btn-danger" value="Create Now" disabled="disabled">
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        $("#create-form").submit(function () {
+            $.ajaxSetup({
+            data:{csrfmiddlewaretoken: '{{ csrf_token }}'}
+            });
+            $.ajax({
+                type:"POST",
+                url:"{% url "host_create" %}",
+                dataType:"json",
+                data:{owner:$("#host-owner").val(), hostname:$("#host-name").val(), ipaddress:$("#ip-address").val(), business:$("#business-line").val()},
+                success:function (data) {
+                    if(data.status){
+                        $("#create-form").remove();
+                        $("#create-div").html('<span>创建成功</span><div><a href="{% url "host_create" %}">继续添加</a></div><div><a href="{% url "index" %}">返回主页</a></div>').css("margin-left","200px")
+                    }else {
+                        $("#business-error-span").text(data.error).css("color","red").css("font-size","12px");
+                    }
+                }
+            });
+            return false
+        });
+
+        $("#host-name").blur(function () {
+            var hostname=$(this).val();
+            if(hostname==""){
+                $("#hostname-error-span").text("Host Name不能为空").css("color","red");
+                $("#business-submit").attr("disabled","disabled");
+            }else {
+                $("#business-submit").removeAttr("disabled");
+            }
+        });
+        $("#ip-address").blur(function () {
+            var address=$(this).val();
+            if(address==""){
+                $("#address-error-span").text("IP Address不能为空").css("color","red");
+                $("#business-submit").attr("disabled","disabled");
+            }else {
+                $("#business-submit").removeAttr("disabled");
+            }
+        })
+    </script>
+{% endblock %}
